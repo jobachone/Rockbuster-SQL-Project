@@ -1,0 +1,206 @@
+# Joining Tables with SQL
+
+## Contents
+-- Finding the top 10 countries for Rockbuster in terms of customer numbers
+-- Finding the top 10 cities that fall within the top 10 countries previously identified
+-- Finding the top 5 customers from  the top 10 cities who’ve paid the highest total amounts to Rockbuster
+-- Finding the 10 most profitable movies in the Rockbuster database
+-- Ranking the top 10 nations by rental revenue
+
+
+--Finding top 10 countries for Rockbuster in terms of customer numbers
+
+Query:
+
+SELECT D.Country,
+	   COUNT(customer_id)
+FROM customer A
+INNER JOIN address B ON A.address_id = B.address_id
+INNER JOIN city C ON B.city_id = C.city_id
+INNER JOIN country D ON C.country_id = D.country_id
+GROUP BY country 
+ORDER BY count(customer_id) DESC
+LIMIT 10
+
+Output:
+
+"India"			60
+"China"		53
+"United States"	36
+"Japan"		31
+"Mexico"		30
+"Brazil"		28
+"Russian Federation"	28
+"Philippines"		20
+"Turkey"		15
+"Indonesia"		14
+
+
+Rationalle:
+I looked at the ERD and saw that the Country table was 
+linked to the customer tables thru the city and address tables, so multiple INNER JOINs would be utilized. 
+Saw the output, which was alphabetical by country, so I added the ORDER BY(customer_id) DESC 
+and then LIMIT 10 for the top 10 countries.*/
+
+-- Finding the top 10 cities that fall within the top 10 countries previously identified.
+
+Query:
+SELECT C.city,
+	   D.country,
+	   COUNT(customer_id)
+FROM customer A
+INNER JOIN address B ON A.address_id = B.address_id
+INNER JOIN city C ON B.city_id = C.city_id
+INNER JOIN country D ON C.country_id = D.country_id
+WHERE country IN( 		'India',
+				 'China',
+				 'United States',
+				 'Japan',
+				 'Mexico',
+				 'Brazil',
+				 'Russian Federation',
+				 'Philippines',
+				 'Turkey',
+				 'Indonesia')
+GROUP BY city,
+		 country
+ORDER BY count(customer_id)DESC
+LIMIT 10
+
+
+Output:
+"Aurora"	      	"United States"	2
+"Atlixco"	        "Mexico"		    1
+"Xintai"		      "China"		      1
+"Adoni"		        "India"		      1
+"Dhule (Dhulia)"	"India"		      1
+"Kurashiki"	      "Japan"		  	  1
+"Pingxiang"	      "China"		  	  1
+"Sivas"	          "Turkey"		    1
+"Celaya"		      "Mexico"		    1
+"So Leopoldo"		  "Brazil"		    1
+
+Rationalle:
+I modified the top 10 countries prompt to include city in the output, 
+and used a WHERE/IN clause to limit the cities to the top 10 countries we identified in Step 1.
+Had to modify the group by to include both city and country, 
+and kept the ORDER BY/ DESC and LIMIT 10 the same.  
+
+-- Finding the top 5 customers from  the top 10 cities who’ve paid the highest total amounts to Rockbuster.
+
+Query:
+SELECT A.customer_id,
+	   A.first_name,
+	   A.last_name,
+	   C.city,
+	   D.country,
+	   SUM(E.amount) AS total_amount_paid
+FROM customer A
+INNER JOIN address B ON A.address_id = B.address_id
+INNER JOIN city C ON B.city_id = C.city_id
+INNER JOIN country D ON C.country_id = D.country_id
+INNER JOIN payment E on A.customer_id = E.customer_id
+WHERE country IN( 'India',
+				 'China',
+				 'United States',
+				 'Japan',
+				 'Mexico',
+				 'Brazil',
+				 'Russian Federation',
+				 'Philippines',
+				 'Turkey',
+				 'Indonesia')
+AND city IN ('Aurora',
+			'Atlixco',
+			'Xintai',
+			'Adoni',
+			'Dhule (Dhulia)'
+			'Kurashiki'
+			'Pingxiang'
+			'Sivas'
+			'Celaya'
+			'So Leopoldo')
+GROUP BY A.customer_id,
+		 first_name,
+		 last_name,
+		 city,
+		 country
+ORDER BY SUM(E.amount)DESC
+LIMIT 5
+
+Output:
+84	"Sara"		"Perry"		  "Atlixco"	"Mexico"		    128.70
+537	"Clinton"	"Buford"	  "Aurora"	"United States"	98.76
+367	"Adam"	  "Gooch"	    "Adoni"	  "India"		      97.80
+564	"Bob"		  "Pfeiffer"  "Xintai"	"China"		      82.78
+330	"Scott"		"Shelley"	  "Aurora"	"United States"	60.82
+
+Rationalle:
+Changed GROUP BY output to the info we want on the top 5 customers. Then Order by SUM(e.amount)DESC, limited to the top 5.
+
+-- Finding the 10 most profitable movies in the Rockbuster database
+Query:
+SELECT A.title,
+	   A.release_year,
+	   SUM(D.amount) AS rental_revenue
+FROM film A
+INNER JOIN inventory B ON A.film_id = B.film_id
+INNER JOIN rental C ON B.inventory_id = C.inventory_id
+INNER JOIN payment D ON C.rental_id = D.rental_id
+GROUP BY A.film_id,
+		 A.title,
+		 A.release_year,
+		 D.amount
+ORDER BY rental_revenue DESC
+LIMIT 10
+
+Output:
+"Trip Newton"	          2006	104.79
+"Scalawag Duck"	        2006	104.79
+"Bucket Brotherhood"	  2006	104.79
+"Forrester Comancheros"	2006	94.81
+"Durham Panky"        	2006	94.81
+"Boogie Amelie"        	2006	89.82
+"Coma Head"	            2006	89.82
+"Cat Coneheads"	        2006	89.82
+"Truman Crazy"	        2006	84.83
+"Dogma Family"	        2006	84.83
+
+Rationalle:
+Used ERD and INNER JOIN to link amount from Payment table to Film table. 
+ORDERED BY rental_revenue, or the sum of amounts from the Payment table, Descending.
+
+-- Ranking top 10 nations by rental revenue
+
+Query:
+SELECT	D.country,
+	   SUM(E.amount) AS country_total_rental
+FROM payment E
+RIGHT JOIN customer A ON E.customer_id = A.customer_id
+INNER JOIN address B ON A.address_id = B.address_id
+INNER JOIN city C ON B.city_id = C.city_id
+INNER JOIN country D ON C.country_id = D.country_id
+GROUP BY D.country
+ORDER BY SUM(E.amount) DESC
+LIMIT 10
+
+Output:
+"India"	6034.78
+"China"	5251.03
+"United States"	3685.31
+"Japan"	3122.51
+"Mexico"	2984.82
+"Brazil"	2919.19
+"Russian Federation"	2765.62
+"Philippines"	2219.70
+"Turkey"	1498.49
+"Indonesia"	1352.69
+
+Rationalle:
+Linked customer table to payment table with Right Join, 
+because we only wanted to keep merge payments that had an associated customer_id.
+From there, inner joins from Address table to Country table.
+Ordered by SUM of the amounts as a total, descending and limited to 10.
+
+
+
