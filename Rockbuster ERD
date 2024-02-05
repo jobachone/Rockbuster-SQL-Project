@@ -1,3 +1,5 @@
+Exported from Lucid for PostgreSQL
+
 CREATE TABLE "country" (
   "country_id" integer,
   "country" character varying(50),
