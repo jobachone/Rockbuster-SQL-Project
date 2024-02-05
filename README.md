@@ -38,5 +38,6 @@ and hosted on Tableau public in addition to being featured on Presentations.
 
 Tableau Public Link:
 https://public.tableau.com/views/RockbusterSubscribers-geospatial/RockbusterDashboard?:language=en-US&publish=yes&:display_count=n&:origin=viz_share_link
+
 Lucid Link for Rockbuster Stealth ERD visualization:
 https://lucid.app/lucidchart/6de9e8ab-9efb-48a1-9560-24c6f4bf7580/edit?invitationId=inv_e20fb7c5-caf9-4d84-826a-c5c3ea7a503b
