@@ -1,14 +1,14 @@
-# SQL Repository
-Exploratory data analysis with movie rental relational database, conducted using PostgreSQL.
+# SQL Project Repository
+Context driven exploratory data analysis with simulated movie rental relational database, conducted using PostgreSQL.
 See 01 Project Management, project brief for details; data analyst assignment with
 Rockbuster Stealth LLC.
 
 ## Key Questions and Objectives:
-● Which movies contributed the most/least to revenue gain?
-● What was the average rental duration for all videos?
-● Which countries are Rockbuster customers based in?
-● Where are customers with a high lifetime value based?
-● Do sales figures vary between geographic regions?
+- Which movies contributed the most/least to revenue gain?
+- What was the average rental duration for all videos?
+- Which countries are Rockbuster customers based in?
+- Where are customers with a high lifetime value based?
+- Do sales figures vary between geographic regions?
 
 ## Contents
 - 01 Project Management
