@@ -1,0 +1,44 @@
+
+-- Checking film table for duplicate data: 
+SELECT DISTINCT title,
+				release_year,
+				rental_duration,
+				rental_rate
+FROM film;
+
+-- Checking film table for non-uniform values:
+SELECT  title,
+				rating,
+				release_year,
+				rental_duration,
+				rental_rate
+FROM film
+GROUP BY title,
+	rating,
+	release_year,
+	rental_duration,
+	rental_rate
+ORDER BY rating
+		
+-- Checking film table for null values:
+SELECT COUNT(rental_rate) AS count_rent_values,
+COUNT (title) AS "number of titles"
+FROM film
+
+
+-- Checking film table summary statistics. Release year, rental duration, rental rate, length, replacement cost, etc.
+SELECT MIN(release_year) AS min_release_year,
+	MAX(release_year) AS max_release_year,
+	AVG(release_year) AS avg_release_year
+FROM film
+
+SELECT MIN(rental_duration),
+	MAX(rental_duration),
+	AVG(rental_duration)
+FROM film
+
+-- Finding MODE for non-numerical categories like Title, Special Features, etc.
+SELECT MODE() WITHIN GROUP (ORDER BY [non-numeric category])
+	AS modal_value
+FROM film
+
