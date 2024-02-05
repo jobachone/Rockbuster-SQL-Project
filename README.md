@@ -13,7 +13,7 @@ Rockbuster Stealth LLC.
 ## Contents
 - 01 Project Management
     - Project Brief
-- 02 Data
+- 02 Data (not comprehensive, maintained to demonstrate structure)
   - Original Data
   - Prepared Data
 - 03 Scripts + Task Answers
