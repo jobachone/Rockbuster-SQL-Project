@@ -1,0 +1,152 @@
+# Performing Subqueries in SQL
+
+Contents:
+-- Find average amount paid from top 5 customers, utilizing subquery.
+-- Find how many of the top 5 customers are based within each country
+-- BIG PICTURE ON SUBQUERIES
+
+-- Find average amount paid from top 5 customers, utilizing subquery.
+
+Query:
+SELECT total_amount_paid.first_name,
+	   total_amount_paid.last_name,
+	   AVG(total_amount_paid.amount) AS total
+FROM
+	(SELECT A.customer_id,
+		   A.first_name,
+		   A.last_name,
+		   C.city,
+		   D.country,
+		   SUM(E.amount) AS amount
+	FROM customer A
+	INNER JOIN address B ON A.address_id = B.address_id
+	INNER JOIN city C ON B.city_id = C.city_id
+	INNER JOIN country D ON C.country_id = D.country_id
+	INNER JOIN payment E on A.customer_id = E.customer_id
+	WHERE country IN( 'India',
+					 'China',
+					 'United States',
+					 'Japan',
+					 'Mexico',
+					 'Brazil',
+					 'Russian Federation',
+					 'Philippines',
+					 'Turkey',
+					 'Indonesia')
+	AND city IN ('Aurora',
+				'Atlixco',
+				'Xintai',
+				'Adoni',
+				'Dhule (Dhulia)'
+				'Kurashiki'
+				'Pingxiang'
+				'Sivas'
+				'Celaya'
+				'So Leopoldo')
+	GROUP BY A.customer_id,
+			 first_name,
+			 last_name,
+			 city,
+			 country
+	ORDER BY SUM(E.amount)DESC
+	LIMIT 5) AS total_amount_paid -- subquery renamed total_amount_paid
+GROUP BY total_amount_paid.customer_id,
+	     total_amount_paid.first_name,
+	   	 total_amount_paid.last_name
+
+Output:
+First_name	last_name	  total
+"Sara"		  "Perry"		  128.7000000000000000
+"Scott"		  "Shelley"	  60.8200000000000000
+"Adam"	    "Gooch"	    97.8000000000000000
+"Clinton"	  "Buford"	  98.7600000000000000
+"Bob"		  "Pfeiffer"	  82.7800000000000000
+
+Rationalle:
+Using the same query string that identified the top 5 customers in the top 10 cities in the top 10 countries from before,
+as a subquery, we position it AS total_amount_paid in the FROM Clause, then SELECT and GROUP BY customer_id, first_name,
+last_name from the subquery, anotated as total_amount_paid.customer_id, etc.
+
+-- Find how many of the top 5 customers are based within each country
+Query:
+SELECT D.country,
+	   COUNT(A.customer_id) AS all_customer_count,
+	   COUNT(top_5_customer) AS top_customer_count
+FROM customer A
+INNER JOIN address B ON A.address_id = B.address_id
+INNER JOIN city C ON B.city_id = C.city_id
+INNER JOIN country D ON C.country_id = D.country_id
+LEFT JOIN	 
+	(SELECT A.customer_id,
+			A.first_name,
+			A.last_name,
+			C.city,
+			D.country,
+			SUM(E.amount) AS total_amount_paid
+	FROM customer A
+	INNER JOIN address B ON A.address_id = B.address_id
+	INNER JOIN city C ON B.city_id = C.city_id
+	INNER JOIN country D ON C.country_id = D.country_id
+	INNER JOIN payment E on A.customer_id = E.customer_id
+	WHERE country IN( 'India',
+					 'China',
+					 'United States',
+					 'Japan',
+					 'Mexico',
+					 'Brazil',
+					 'Russian Federation',
+					 'Philippines',
+					 'Turkey',
+					 'Indonesia')
+	AND city IN ('Aurora',
+				'Atlixco',
+				'Xintai',
+				'Adoni',
+				'Dhule (Dhulia)'
+				'Kurashiki'
+				'Pingxiang'
+				'Sivas'
+				'Celaya'
+				'So Leopoldo')
+	GROUP BY A.customer_id,
+			 A.first_name,
+			 A.last_name,
+			 C.city,
+			 D.country
+	ORDER BY total_amount_paid DESC
+	LIMIT 5)top_5_customer ON  A.customer_id = top_5_customer.customer_id
+GROUP BY D.country
+ORDER BY top_customer_count DESC
+LIMIT 5;
+
+Output:
+"United States"	36	2
+"Mexico"		    30	1
+"India"		    	60	1
+"China"	      	53	1
+"Faroe Islands"  	1	0
+
+Rationalle:
+Used subquery in a LEFT JOIN instead of the FROM, still shorthands the top 5 customers from a previous query.
+
+-- BIG PICTURE ON SUBQUERIES
+1. Could these be done without subqueries?
+First one could have been achieved without subqueries by linking the payment table to the customer table, 
+but it would be step by step process to determine the top cities and countries along the way. 
+In that sense I can see the value of the subquery essentially saving the progress of a previous query, 
+but the tradeoff in procssing speed or readability could hamper those advantages depending on the situation. 
+Likewise, the second question would still require multiple joins to link the payment table to the customer table 
+to the address table and so on, but where the subquery came in handy is that it already captured our desired parameters 
+for only the top 5 customers from our last task. 
+
+2. When do you think subqueries are useful?
+Subqueries are useful in providing a “shorthand” for a certain condition, 
+like our top 5 customers, that is dynamic by nature, and likely to change. 
+I see it as a tool in our tool belt – appropriate for specific conditions,
+and overkill or just not suitable for others.
+
+
+
+
+
+
