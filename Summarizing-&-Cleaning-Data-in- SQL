@@ -1,3 +1,11 @@
+# Cleaning and Summarizing Data in SQL
+
+## Contents:
+-- Checking film table for duplicate data
+-- Checking film table for non-uniform values
+-- Checking film table for null values
+-- Checking film table summary statistics
+-- Finding MODE for non-numerical categories
 
 -- Checking film table for duplicate data: 
 SELECT DISTINCT title,
