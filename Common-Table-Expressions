@@ -1,0 +1,191 @@
+# Common Table Expressions in SQL and comparisons of CTE vs subquery performance.
+
+## Contents
+
+--Use CTEs for questions from task 3.8 on subqueries
+-- Comparing performance of CTEs vs subqueries
+
+--Use CTEs for questions from task 3.8 on subqueries
+
+1. WITH top_5_customer_cte (customer_id, first_name, last_name, city, country, amount_paid) AS
+	(SELECT A.customer_id,
+		   A.first_name,
+		   A.last_name,
+		   C.city,
+		   D.country,
+		   SUM(E.amount) AS amount_paid
+	FROM customer A
+	INNER JOIN address B ON A.address_id = B.address_id
+	INNER JOIN city C ON B.city_id = C.city_id
+	INNER JOIN country D ON C.country_id = D.country_id
+	INNER JOIN payment E on A.customer_id = E.customer_id
+	WHERE country IN( 'India',
+					 'China',
+					 'United States',
+					 'Japan',
+					 'Mexico',
+					 'Brazil',
+					 'Russian Federation',
+					 'Philippines',
+					 'Turkey',
+					 'Indonesia')
+	AND city IN ('Aurora',
+				'Atlixco',
+				'Xintai',
+				'Adoni',
+				'Dhule (Dhulia)'
+				'Kurashiki'
+				'Pingxiang'
+				'Sivas'
+				'Celaya'
+				'So Leopoldo')
+	GROUP BY A.customer_id,
+			 first_name,
+			 last_name,
+			 city,
+			 country
+	ORDER BY amount_paid DESC
+	LIMIT 5)
+
+SELECT customer_id,
+	   first_name,
+	   last_name,
+	   city,
+	   country,
+	   amount_paid
+FROM top_5_customer_cte 
+GROUP BY 1,2,3,4,5,6
+
+Output:
+
+"customer_id"	"first_name"		"last_name"	  "city"		  "country"	    "amount_paid"
+84		          "Sara"	"		    Perry"		 "Atlixco"  "Mexico"		        128.70
+330		          "Scott"			    "Shelley"	  "Aurora"	"United States"	    60.82
+367		          "Adam"		      "Gooch"	    "Adoni"	    "India"			      97.80
+537		        "Clinton"		      "Buford"	  "Aurora"	"United States"	    98.76
+564	          	"Bob"		        "Pfeiffer"  "Xintai"	   "China"		      82.78
+
+
+1b. Query:
+WITH top_5_customer_CTE (customer_id, first_name, last_name, country, city, total_amount_paid) AS (
+		  
+	
+		SELECT A.customer_id,
+				A.first_name,
+				A.last_name,
+				C.city,
+				D.country,
+				SUM(E.amount) AS total_amount_paid
+		FROM customer A
+		INNER JOIN address B ON A.address_id = B.address_id
+		INNER JOIN city C ON B.city_id = C.city_id
+		INNER JOIN country D ON C.country_id = D.country_id
+		INNER JOIN payment E on A.customer_id = E.customer_id
+		WHERE country IN( 'India',
+						 'China',
+						 'United States',
+						 'Japan',
+						 'Mexico',
+						 'Brazil',
+						 'Russian Federation',
+						 'Philippines',
+						 'Turkey',
+						 'Indonesia')
+		AND city IN ('Aurora',
+					'Atlixco',
+					'Xintai',
+					'Adoni',
+					'Dhule (Dhulia)'
+					'Kurashiki'
+					'Pingxiang'
+					'Sivas'
+					'Celaya'
+					'So Leopoldo')
+		GROUP BY A.customer_id,
+			 A.first_name,
+			 A.last_name,
+			 D. country,
+			 C. city
+		ORDER BY total_amount_paid DESC
+		LIMIT 5)
+		
+SELECT D. country,
+	   COUNT (A.customer_id) AS total_customer_count,
+	   COUNT (top_5_customer_CTE) AS top_customer_count
+FROM customer A
+INNER JOIN address B ON A.address_id = B.address_id
+INNER JOIN city C on B.city_id = C.city_id
+INNER JOIN country D on C.country_id = D.country_id
+LEFT JOIN top_5_customer_cte ON A.customer_id = top_5_customer_cte.customer_id
+GROUP BY D.country
+ORDER BY top_customer_count DESC
+LIMIT 5;
+
+Output:
+"country"	"total_customer_count"	"top_customer_count"
+"United States"            	36					2
+"Mexico"	                 	30					1
+"India"			                60					1
+"China"	                  	53					1
+"Faroe Islands"	1			              		0
+
+
+
+-- Comparing performance of CTEs vs subqueries
+2a. Pre-trial performance estimation
+I’m going to venture a guess that sub-querying will be faster 
+because CTE must make a table first and then reference it, 
+versus a subquery which must run the entire process every time. 
+Maybe on initial running at least, and then CTE’s have the edge on repeat inquiries.
+
+-- Query Plan Comparison
+
+3.8.1 (Subquery A)
+"QUERY PLAN"
+"GroupAggregate  (cost=27.47..27.60 rows=5 width=49)"
+
+3.8.2 (Subquery B)
+"QUERY PLAN"
+"Limit  (cost=100.47..100.48 rows=5 width=25)"
+
+3.9.1
+"QUERY PLAN" (CTE A)
+"Group  (cost=27.42..27.51 rows=5 width=67)"
+
+3.9.2
+"QUERY PLAN" (CTE B)
+"Limit  (cost=100.47..100.48 rows=5 width=25)"
+
+
+Appears that the two versions across 3.8 and 3.9 have more in common with each other than the two subqueries and two CTE’s, 
+which makes sense as they’re essentially doing the same thing in a different format. 
+The queries finding how many customers in each country/ how many top 5 customers in each country 
+is almost 4 times more costly than the other queries only trying to identify the top 5 customers. 
+For the latter pair, the CTE has the slight cost edge, 27.42 vs 27.47, but also has more width at 67 vs 49. 
+For the former pair, the CTE and subquery have apparently identical costs. 
+Makes me think I might not be reading the QUERY PLAN correctly. 
+Anyways, let’s run the actual queries and compare run speed.
+
+2c. Actual Query run time comparison
+
+3.8.1
+88 msec / 44 msec / 49 msec
+
+3.8.2
+83 msec / 69 msec / 67 msec
+
+3.9.1
+62 msec / 60 msec/ 63 msec
+
+3.9.2
+78 msec / 69 msec / 72 msec
+
+These results are surprising, especially the seemingly wide variance 
+between different runs for the subquery method queries. 
+The CTEs were more consistent and had a slightly smaller spread, in the case of the top 5 customers, 
+a much smaller spread. 
+It all seems a bit random to me, I wonder how many factors go into the speed – 
+computer processing demand at the time, the length of time between runs, etc. 
+Based on this data it’s difficult to give CTE a definitive performance edge, 
+so any benefits toward it would have to be based on readability.
+
